@@ -1,12 +1,10 @@
 {
   "name": "dengdeng",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "dev": "nuxt dev",
+    "build": "nuxt build"
   },
   "dependencies": {
     "@ai-sdk/openai": "^0.0.48",
@@ -14,18 +12,15 @@
     "ai": "^3.3.9",
     "asana": "^3.0.8",
     "groq-sdk": "^0.5.0",
+    "nuxt": "^3.12.4",
     "openai": "^4.56.0",
     "vue": "^3.4.38",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/dom-speech-recognition": "^0.0.4",
-    "@vitejs/plugin-vue": "^5.1.2",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.41",
-    "tailwindcss": "^3.4.10",
-    "typescript": "^5.5.4",
-    "vite": "^5.3.5",
-    "vue-tsc": "^2.0.29"
+    "tailwindcss": "^3.4.10"
   }
 }
