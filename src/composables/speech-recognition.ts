@@ -5,6 +5,7 @@ export function useSpeechRecognition() {
   const recognition = new webkitSpeechRecognition()
 
   const recognizing = ref(false)
+  const provisionalTranscript = ref('')
   const finalTranscript = ref('')
 
   recognition.lang = 'es'
@@ -17,7 +18,7 @@ export function useSpeechRecognition() {
 
   recognition.onresult = function(event) {
     for (var i = event.resultIndex; i < event.results.length; ++i) {
-      console.log(event.results[i][0].transcript)
+      provisionalTranscript.value = event.results[i][0].transcript
       if (event.results[i].isFinal) {
         finalTranscript.value += event.results[i][0].transcript
       }
@@ -40,7 +41,7 @@ export function useSpeechRecognition() {
     recognizing.value = false    
   }
 
-  function start() {
+  function startRecognition() {
     recognizing.value
       ? recognition.stop()
       : recognition.start()
@@ -48,7 +49,8 @@ export function useSpeechRecognition() {
 
   return {
     recognizing,
+    provisionalTranscript,
     finalTranscript,
-    start,
+    startRecognition,
   }
 }

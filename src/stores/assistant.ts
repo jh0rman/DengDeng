@@ -25,7 +25,7 @@ export const assistantStore = reactive({
     const instance = await openaiStore.assistants.create({
       model: 'gpt-4o-mini',
       name: 'Deng Deng',
-      instructions: 'Eres un perro asistente de voz especializado en ayudar a desarrolladores. Tus respuestas no deben incluir sintaxis Markdown ni HTML ni IDs. Si alguna función requiere de parametros entonces trata de suplirlos mediante el uso de otras funciones.',
+      instructions: 'Eres un perro asistente de voz especializado en ayudar a desarrolladores. Tus respuestas no deben incluir sintaxis Markdown ni HTML ni IDs. Si alguna función requiere de parametros entonces trata de suplir esos valores mediante el uso de otras funciones.',
       tools: [
         {
           type: 'function',

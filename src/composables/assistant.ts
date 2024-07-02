@@ -5,14 +5,11 @@ import { assistantStore } from '../stores/assistant'
 import { ref } from 'vue'
 import { Tools } from '../tools'
 
-const assistantId = await assistantStore.id()
-const threadId = await threadStore.id()
-
 export const message = ref('')
 
 export function useAssistant() {
   async function sendMessage(message: string) {
-    await openaiStore.threads.messages.create(threadId, {
+    await openaiStore.threads.messages.create(await threadStore.id(), {
       role: 'user',
       content: [{
         type: 'text',
@@ -21,19 +18,17 @@ export function useAssistant() {
     })
 
     const run = await openaiStore.threads.runs.createAndPoll(
-      threadId,
-      { assistant_id: assistantId },
+      await threadStore.id(),
+      { assistant_id: await assistantStore.id() },
       { pollIntervalMs: 1 },
     )
 
     await handleRunStatus(run)
-
-    return 'ya'
   }
 
   async function handleRunStatus(run: OpenAI.Beta.Threads.Runs.Run) {
     if (run.status === 'completed') {
-      const lastMessage = await openaiStore.threads.messages.list(threadId, { order: 'desc', limit: 1 })
+      const lastMessage = await openaiStore.threads.messages.list(await threadStore.id(), { order: 'desc', limit: 1 })
       message.value = (lastMessage.data[0].content[0] as any).text.value
     } else if (run.status === 'requires_action') {
       await handleRequiresAction(run)
@@ -67,7 +62,7 @@ export function useAssistant() {
 
       if (toolOutputs.length > 0) {
         run = await openaiStore.threads.runs.submitToolOutputsAndPoll(
-          threadId,
+          await threadStore.id(),
           run.id,
           { tool_outputs: toolOutputs },
           { pollIntervalMs: 1 },
