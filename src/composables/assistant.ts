@@ -2,9 +2,8 @@ import OpenAI from 'openai'
 import { threadStore } from '../stores/thread'
 import { openaiStore } from '../stores/openai'
 import { assistantStore } from '../stores/assistant'
-import { useDoggo } from './doggo'
 import { ref } from 'vue'
-import { AsanaTools } from '../tools/asana'
+import { Tools } from '../tools'
 
 const assistantId = await assistantStore.id()
 const threadId = await threadStore.id()
@@ -12,9 +11,6 @@ const threadId = await threadStore.id()
 export const message = ref('')
 
 export function useAssistant() {
-
-  const doggo = useDoggo()
-
   async function sendMessage(message: string) {
     await openaiStore.threads.messages.create(threadId, {
       role: 'user',
@@ -56,7 +52,7 @@ export function useAssistant() {
         async (tool) => {
           try {
             const parameters = JSON.parse(tool.function.arguments)
-            const toolFunction = AsanaTools[tool.function.name as keyof typeof AsanaTools]
+            const toolFunction = Tools[tool.function.name as keyof typeof Tools]
             const res = await toolFunction(parameters)
   
             return {
