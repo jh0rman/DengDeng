@@ -1,69 +1,50 @@
-import OpenAI from 'openai'
-import { threadStore } from '../stores/thread'
-import { openaiStore } from '../stores/openai'
-import { assistantStore } from '../stores/assistant'
+import { useDoggo } from './doggo'
+import { ref } from 'vue'
+import { CoreMessage, CoreTool, generateText, tool } from 'ai'
+import { groqStore } from '../stores/groq'
+import { z } from 'zod'
 
-export async function useAssistant() {
-  const assistantId = await assistantStore.id()
-  const threadId = await threadStore.id()
+export function useAssistant() {
+  const SYSTEM_MESSAGE = 'Deng Deng, un perro asistente de voz especializado en ayudar a desarrolladores. Tus principales funciones incluyen gestionar tareas en Asana, manejar sesiones de Pomodoro, crear y gestionar pull requests en GitHub, y proporcionar asistencia general para la programación. Debes ser claro y preciso en tus respuestas, asegurándote de proporcionar la información más útil y relevante posible. Usa un tono amigable y profesional. Responde principalmente en español y en inglés cuando se te pida.'
 
-  await openaiStore.threads.messages.create(threadId, {
-    role: 'user',
-    content: '¿quién creó esta aplicación? su apellido es Ipsum',
-  })
+  const doggo = useDoggo()
 
-  const run = await openaiStore.threads.runs.createAndPoll(threadId, { assistant_id: assistantId })
+  const messages = ref<CoreMessage[]>([])
 
-  handleRunStatus(run)
-
-  async function handleRunStatus(run: OpenAI.Beta.Threads.Runs.Run) {
-    if (run.status === 'completed') {
-      const lastMessage = await openaiStore.threads.messages.list(threadId, { order: 'desc', limit: 1 })
-      console.log(lastMessage.data[0].content)
-    } else if (run.status === 'requires_action') {
-      await handleRequiresAction(run)
-    } else {
-      console.error('Run did not complete:', run)
-    }
+  const actions: Record<string, CoreTool<any, any>> = {
+    bark: tool({
+      description: 'Hace que DengDeng ladre.',
+      parameters: z.object({}),
+      execute: doggo.bark,
+    })
   }
 
-  async function handleRequiresAction(run: OpenAI.Beta.Threads.Runs.Run) {
-    if (
-      run.required_action &&
-      run.required_action.submit_tool_outputs &&
-      run.required_action.submit_tool_outputs.tool_calls
-    ) {
-      const toolOutputs: OpenAI.Beta.Threads.Runs.RunSubmitToolOutputsParams.ToolOutput[] = run.required_action.submit_tool_outputs.tool_calls.map(
-        tool => {
-          const parameters = JSON.parse(tool.function.arguments)
-          console.log(parameters)
+  async function sendMessage(message: string) {
+    messages.value.push({
+      role: 'user',
+      content: [{
+        type: 'text',
+        text: message,
+      }],
+    })
 
-          switch (tool.function.name) {
-            case 'get_creator_name_by_last_name':
-              return {
-                tool_call_id: tool.id,
-                output: 'Lorem',
-              }
-            default:
-              throw new Error(
-                `Unknown tool call function: ${tool.function.name}`,
-              )
-          }
-        },
-      )
+    const response = await generateText({
+      model: groqStore.model,
+      system: SYSTEM_MESSAGE,
+      messages: messages.value,
+      toolChoice: 'auto',
+      tools: actions,
+      maxToolRoundtrips: 1,
+    })
 
-      if (toolOutputs.length > 0) {
-        run = await openaiStore.threads.runs.submitToolOutputsAndPoll(
-          threadId,
-          run.id,
-          { tool_outputs: toolOutputs },
-        )
-        console.log('Tool outputs submitted successfully.')
-      } else {
-        console.log('No tool outputs to submit.')
-      }
-  
-      return handleRunStatus(run)
-    }
+    console.log('response', response)
+    messages.value = messages.value.concat(response.responseMessages)
+
+    return response.text
+  }
+
+  return {
+    messages,
+    sendMessage,
   }
 }
