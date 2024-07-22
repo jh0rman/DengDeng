@@ -9,12 +9,15 @@ export const openaiStore = reactive({
       apiKey: getOpenAIKey(),
       dangerouslyAllowBrowser: true,
     })
-    return client.beta
+    return client
   },
-  get threads() {
-    return this.instance.threads
+  get audio() {
+    return this.instance.audio
   },
   get assistants() {
-    return this.instance.assistants
+    return this.instance.beta.assistants
+  },
+  get threads() {
+    return this.instance.beta.threads
   },
 })
