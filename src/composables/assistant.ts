@@ -23,7 +23,7 @@ export async function useAssistant() {
     } else if (run.status === 'requires_action') {
       await handleRequiresAction(run)
     } else {
-      console.error("Run did not complete:", run)
+      console.error('Run did not complete:', run)
     }
   }
 
