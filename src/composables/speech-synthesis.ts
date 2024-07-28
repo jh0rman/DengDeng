@@ -10,6 +10,7 @@ export function useSpeechSynthesis() {
       return
     }
     utterance.voice = voice
+    utterance.rate = 1.2
     speechSynthesis.speak(utterance)
   }
 

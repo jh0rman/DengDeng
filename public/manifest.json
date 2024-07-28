@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Deng Deng",
+  "description": "AI powered assistant",
+  "version": "1.0",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": []
+}
