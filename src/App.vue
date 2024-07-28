@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { watch } from 'vue'
-import { useAssistant } from './composables/assistant'
+import { message, useAssistant } from './composables/assistant'
 import { useSpeechRecognition } from './composables/speech-recognition'
 import { useSpeechSynthesis } from './composables/speech-synthesis'
 
-const { messages, sendMessage } = useAssistant()
+const { sendMessage } = useAssistant()
 const speechSynthesis = useSpeechSynthesis()
 const speechRecognition = useSpeechRecognition()
 
+watch(message, message => {
+  console.log('response', message)
+  speechSynthesis.speak(message)
+})
+
 watch(speechRecognition.recognizing, async (value) => {
   if (!value) {
-    const response = await sendMessage(speechRecognition.finalTranscript.value)
-    console.log('response', response)
-    if (!response) return
-    speechSynthesis.speak(response)
+    await sendMessage(speechRecognition.finalTranscript.value)
   } else {
     speechRecognition.finalTranscript.value = ''
   }
@@ -32,8 +34,4 @@ function handleMessage() {
     enviar mensaje {{ speechRecognition.recognizing }}
   </button>
   <p>{{ speechRecognition.finalTranscript }}</p>
-  <p v-for="message in messages">
-    <b>{{ message.role }}:</b>
-    {{ message.content }}
-  </p>
 </template>

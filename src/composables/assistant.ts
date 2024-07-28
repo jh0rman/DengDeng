@@ -1,28 +1,22 @@
+import OpenAI from 'openai'
+import { threadStore } from '../stores/thread'
+import { openaiStore } from '../stores/openai'
+import { assistantStore } from '../stores/assistant'
 import { useDoggo } from './doggo'
 import { ref } from 'vue'
-import { CoreMessage, CoreTool, generateText, tool } from 'ai'
-import { groqStore } from '../stores/groq'
-import { z } from 'zod'
-import { asanaTools } from '../tools/asana'
+import { AsanaApi } from '../tools/asana'
+
+const assistantId = await assistantStore.id()
+const threadId = await threadStore.id()
+
+export const message = ref('')
 
 export function useAssistant() {
-  const SYSTEM_MESSAGE = 'Deng Deng, un perro asistente de voz especializado en ayudar a desarrolladores. Tus principales funciones incluyen gestionar tareas en Asana, manejar sesiones de Pomodoro, crear y gestionar pull requests en GitHub, y proporcionar asistencia general para la programación. Debes ser claro y preciso en tus respuestas, asegurándote de proporcionar la información más útil y relevante posible. Usa un tono amigable y profesional. Responde principalmente en español y en inglés cuando se te pida.'
 
   const doggo = useDoggo()
 
-  const messages = ref<CoreMessage[]>([])
-
-  const actions: Record<string, CoreTool<any, any>> = {
-    ...asanaTools,
-    bark: tool({
-      description: 'Hace que DengDeng ladre.',
-      parameters: z.object({}),
-      execute: doggo.bark,
-    })
-  }
-
   async function sendMessage(message: string) {
-    messages.value.push({
+    await openaiStore.threads.messages.create(threadId, {
       role: 'user',
       content: [{
         type: 'text',
@@ -30,23 +24,68 @@ export function useAssistant() {
       }],
     })
 
-    const response = await generateText({
-      model: groqStore.model,
-      system: SYSTEM_MESSAGE,
-      messages: messages.value,
-      toolChoice: 'auto',
-      tools: actions,
-      maxToolRoundtrips: 1,
-    })
+    const run = await openaiStore.threads.runs.createAndPoll(
+      threadId,
+      { assistant_id: assistantId },
+      { pollIntervalMs: 1 },
+    )
 
-    console.log('response', response)
-    messages.value = messages.value.concat(response.responseMessages)
+    await handleRunStatus(run)
 
-    return response.text
+    return 'ya'
+  }
+
+  async function handleRunStatus(run: OpenAI.Beta.Threads.Runs.Run) {
+    if (run.status === 'completed') {
+      const lastMessage = await openaiStore.threads.messages.list(threadId, { order: 'desc', limit: 1 })
+      message.value = (lastMessage.data[0].content[0] as any).text.value
+    } else if (run.status === 'requires_action') {
+      await handleRequiresAction(run)
+    } else {
+      console.error('Run did not complete:', run)
+    }
+  }
+
+  async function handleRequiresAction(run: OpenAI.Beta.Threads.Runs.Run) {
+    if (
+      run.required_action &&
+      run.required_action.submit_tool_outputs &&
+      run.required_action.submit_tool_outputs.tool_calls
+    ) {
+      const toolOutputs = await Promise.all(run.required_action.submit_tool_outputs.tool_calls.map(
+        async (tool) => {
+          try {
+            const parameters = JSON.parse(tool.function.arguments)
+            const toolFunction = AsanaApi[tool.function.name as keyof typeof AsanaApi]
+            const res = await toolFunction(parameters)
+  
+            return {
+              tool_call_id: tool.id,
+              output: res,
+            }
+          } catch (error) {
+            throw new Error(`Unknown tool call function: ${tool.function.name}`)
+          }
+        },
+      ))
+
+      if (toolOutputs.length > 0) {
+        run = await openaiStore.threads.runs.submitToolOutputsAndPoll(
+          threadId,
+          run.id,
+          { tool_outputs: toolOutputs },
+          { pollIntervalMs: 1 },
+        )
+        console.log('Tool outputs submitted successfully.')
+      } else {
+        console.log('No tool outputs to submit.')
+      }
+  
+      return handleRunStatus(run)
+    }
   }
 
   return {
-    messages,
     sendMessage,
   }
 }
