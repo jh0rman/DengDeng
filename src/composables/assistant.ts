@@ -4,7 +4,7 @@ import { openaiStore } from '../stores/openai'
 import { assistantStore } from '../stores/assistant'
 import { useDoggo } from './doggo'
 import { ref } from 'vue'
-import { AsanaApi } from '../tools/asana'
+import { AsanaTools } from '../tools/asana'
 
 const assistantId = await assistantStore.id()
 const threadId = await threadStore.id()
@@ -56,7 +56,7 @@ export function useAssistant() {
         async (tool) => {
           try {
             const parameters = JSON.parse(tool.function.arguments)
-            const toolFunction = AsanaApi[tool.function.name as keyof typeof AsanaApi]
+            const toolFunction = AsanaTools[tool.function.name as keyof typeof AsanaTools]
             const res = await toolFunction(parameters)
   
             return {

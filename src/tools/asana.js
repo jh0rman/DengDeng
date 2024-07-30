@@ -8,11 +8,9 @@ token.accessToken =  ''
 
 const projectsApiInstance = new Asana.ProjectsApi()
 const sectionsApiInstance = new Asana.SectionsApi()
-const tagsApiInstance = new Asana.TagsApi()
 const tasksApiInstance = new Asana.TasksApi()
-const usersApiInstance = new Asana.UsersApi()
 
-export const AsanaApi = {
+export const AsanaTools = {
   async getProjects({ archived }) {
     const opts = {
       archived: archived,
@@ -31,10 +29,6 @@ export const AsanaApi = {
   },
   async getSectionsForProject({ projectId }) {
     const result = await sectionsApiInstance.getSectionsForProject(projectId)
-    return JSON.stringify(result.data, null, 2)
-  },
-  async getTagsForTask({ taskId }) {
-    const result = await tagsApiInstance.getTagsForTask(taskId)
     return JSON.stringify(result.data, null, 2)
   },
   async addDependenciesForTask({ taskId, dependencies }) {
@@ -65,16 +59,7 @@ export const AsanaApi = {
     const result = await tasksApiInstance.addProjectForTask(body, taskId)
     return JSON.stringify(result.data, null, 2)
   },
-  async addTagForTask({ taskId, tagId }) {
-    const body = {
-      data: {
-        tag: tagId,
-      },
-    }
-    const result = await tasksApiInstance.addTagForTask(body, taskId)
-    return JSON.stringify(result.data, null, 2)
-  },
-  async createTask({ name, completed, due_on, notes, assigneeId, projects, parentId, tags }) {
+  async createTask({ name, completed, due_on, notes, assigneeId, projects, parentId }) {
     const body = {
       data: {
         name,
@@ -84,7 +69,6 @@ export const AsanaApi = {
         assignee: assigneeId,
         projects,
         parent: parentId,
-        tags,
       },
     }
     const result = await tasksApiInstance.createTask(body)
@@ -142,16 +126,7 @@ export const AsanaApi = {
     const result = await tasksApiInstance.removeProjectForTask(body, taskId)
     return JSON.stringify(result.data, null, 2)
   },
-  async removeTagForTask({ taskId, tagId }) {
-    const body = {
-      data: {
-        tag: tagId
-      }
-    }
-    const result = await tasksApiInstance.removeTagForTask(body, taskId)
-    return JSON.stringify(result.data, null, 2)
-  },
-  async updateTask({ taskId, name, completed, due_on, notes, assigneeId, parentId, projects, tags }) {
+  async updateTask({ taskId, name, completed, due_on, notes, assigneeId, parentId, projects }) {
     const body = {
       data: {
         name,
@@ -161,7 +136,6 @@ export const AsanaApi = {
         assignee: assigneeId,
         parent: parentId,
         projects,
-        tags,
       },
     }
     const result = await tasksApiInstance.updateTask(body, taskId)

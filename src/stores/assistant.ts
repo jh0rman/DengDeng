@@ -25,7 +25,7 @@ export const assistantStore = reactive({
     const instance = await openaiStore.assistants.create({
       model: 'gpt-4o-mini',
       name: 'Deng Deng',
-      instructions: 'Eres un perro asistente de voz especializado en ayudar a desarrolladores. Tus respuestas deben ser texto plano, es decir sin Markdown ni HTML, y no debes incluir IDs. Si alguna función requiere de parametros entonces trata de suplir esos valores mediante el uso de otras funciones.',
+      instructions: 'Eres un perro asistente de voz especializado en ayudar a desarrolladores. Tus respuestas no deben incluir sintaxis Markdown ni HTML ni IDs. Si alguna función requiere de parametros entonces trata de suplirlos mediante el uso de otras funciones.',
       tools: [
         {
             "type": "function",
@@ -62,44 +62,6 @@ export const assistantStore = reactive({
                     },
                     "required": [
                         "sectionId",
-                        "taskId"
-                    ],
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "getSectionsForProject",
-                "description": "Obtiene las secciones de un proyecto de Asana.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "projectId": {
-                            "type": "string",
-                            "description": "ID del proyecto del que se obtendrán las secciones."
-                        }
-                    },
-                    "required": [
-                        "projectId"
-                    ],
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "getTagsForTask",
-                "description": "Obtiene las etiquetas de una tarea de Asana.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "taskId": {
-                            "type": "string",
-                            "description": "ID de la tarea de la que se obtendrán las etiquetas."
-                        }
-                    },
-                    "required": [
                         "taskId"
                     ],
                 }
@@ -190,32 +152,8 @@ export const assistantStore = reactive({
         {
             "type": "function",
             "function": {
-                "name": "addTagForTask",
-                "description": "Agrega una etiqueta a una tarea de Asana.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "taskId": {
-                            "type": "string",
-                            "description": "ID de la tarea a la que se agregará la etiqueta."
-                        },
-                        "tagId": {
-                            "type": "string",
-                            "description": "ID de la etiqueta que se agregará a la tarea."
-                        }
-                    },
-                    "required": [
-                        "taskId",
-                        "tagId"
-                    ],
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
                 "name": "createTask",
-                "description": "Crea una tarea en Asana. Se puede hacer que sea subtarea de otra tarea.",
+                "description": "Crea una tarea en Asana.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -248,15 +186,8 @@ export const assistantStore = reactive({
                         },
                         "parentId": {
                             "type": "string",
-                            "description": "ID de la tarea padre de la tarea."
+                            "description": "ID de la tarea padre de la tarea, convierte la tarea en subtarea de la tarea padre."
                         },
-                        "tags": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "Array de IDs de etiquetas que se agregarán a la tarea."
-                        }
                     },
                     "required": [
                         "name",
@@ -449,32 +380,8 @@ export const assistantStore = reactive({
         {
             "type": "function",
             "function": {
-                "name": "removeTagForTask",
-                "description": "Elimina una etiqueta de una tarea de Asana.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "taskId": {
-                            "type": "string",
-                            "description": "ID de la tarea de la que se eliminará la etiqueta."
-                        },
-                        "tagId": {
-                            "type": "string",
-                            "description": "ID de la etiqueta que se eliminará de la tarea."
-                        }
-                    },
-                    "required": [
-                        "taskId",
-                        "tagId"
-                    ],
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
                 "name": "updateTask",
-                "description": "Actualiza una tarea de Asana. Se puede hacer que sea subtarea de otra tarea.",
+                "description": "Actualiza una tarea de Asana.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -507,7 +414,7 @@ export const assistantStore = reactive({
                                 "string",
                                 "null"
                             ],
-                            "description": "Nuevo ID de la tarea padre de la tarea. Si es null, se quitará el padre de la tarea."
+                            "description": "Nuevo ID de la tarea padre de la tarea, convierte la tarea en subtarea de la tarea padre. Si es null, se quitará el padre de la tarea."
                         },
                         "projects": {
                             "type": "array",
@@ -516,13 +423,6 @@ export const assistantStore = reactive({
                             },
                             "description": "Nuevo array de IDs de proyectos a los que se agregará la tarea."
                         },
-                        "tags": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "Nuevo array de IDs de etiquetas que se agregarán a la tarea."
-                        }
                     },
                     "required": [
                         "taskId"
