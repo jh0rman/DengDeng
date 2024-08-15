@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { data } = await useFetch('/api/list-pipelines')
+const { data } = await useFetch('/api/list-profiles')
 </script>
 
 <template>
