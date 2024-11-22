@@ -11,10 +11,24 @@ const { speak } = useSpeechSynthesis()
 const { startRecognition, recognizing, provisionalTranscript, finalTranscript } = useSpeechRecognition()
 const { bark } = useDoggo()
 
-onMounted(() => {
+onMounted(async () => {
   setTimeout(() => {
     message.value = 'Hola. ¿En qué puedo ayudarte?'
   }, 1000)
+
+  try {
+    const a = await fetch('/api/list-pipelines')
+    console.log(a.status)
+    // console.log(await a.json())
+    if (a.status === 401) {
+      const params = new URLSearchParams({
+        profile: 'ga',
+      })
+      await fetch(`/api/sso-login?${params}`)
+    }
+  } catch (error) {
+    console.log(error)
+  }
 })
 
 watch(message, message => {

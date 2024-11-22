@@ -6,6 +6,6 @@
     "dev": "bun index.ts"
   },
   "dependencies": {
-    "cromo": "^1.0.3"
+    "cromo": "^1.1.0"
   }
 }
